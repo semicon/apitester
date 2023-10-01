@@ -1,0 +1,210 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Web App</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+	  
+	  
+    <h1>แบบฟอร์มส่งข้อมูล</h1>
+    <form id="data-form">
+      <div class="mb-3">
+        <label for="name" class="form-label">ชื่อ</label>
+        <input type="text" class="form-control" id="name" name="name" required>
+      </div>
+      <div class="mb-3">
+        <label for="email" class="form-label">อีเมล</label>
+        <input type="email" class="form-control" id="email" name="email" required>
+      </div>
+      <div class="mb-3">
+        <label for="message" class="form-label">ข้อความ</label>
+        <textarea class="form-control" id="message" name="message" rows="4" required></textarea>
+      </div>
+      <div class="mb-3">
+        <label for="message" class="form-label">img</label>
+        <input type="file" name="file" id="file" />
+      </div>
+      <button type="submit" class="btn btn-primary">ส่งข้อมูล</button>
+    </form>
+   </div>
+   
+   
+    <!-- Modal -->
+<div class="modal fade" id="editModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true" >
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="staticBackdropLabel">Modal title</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editForm">
+			<div class="form-group">
+            <label for="editID">รหัส</label>
+            <input type="text" class="form-control" id="editID">
+          </div>
+          <div class="form-group">
+            <label for="editName">ชื่อ</label>
+            <input type="text" class="form-control" id="editName">
+          </div>
+          <div class="form-group">
+            <label for="editEmail">อีเมล</label>
+            <input type="email" class="form-control" id="editEmail">
+          </div>
+          <div class="form-group">
+            <label for="editMessage">ข้อความ</label>
+            <textarea class="form-control" id="editMessage" rows="4"></textarea>
+          </div>
+          <!-- Add more input fields for additional columns as needed -->
+
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" onclick="updateData()">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>  
+    
+    <hr>
+    <div class="container">
+    <h1>ข้อมูลจาก Google Sheets</h1>
+    <table id="data-table" class="display"> </table>
+    </div>
+
+  
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+  
+  <script>
+	  
+	 window.addEventListener('DOMContentLoaded',readdata) 
+	 const gas_url = 'https://script.google.com/macros/s/AKfycbxThNQvVLDJe2QENpksC47P1_rY7gNng3ipImbdP9eu4Bkm5d99E-XROhMG6ewT28eM/exec'
+	 
+	 $(document).ready(function() {
+      // ส่งข้อมูลไปยัง Google Apps Script
+      $('#data-form').submit(function(event) {
+        event.preventDefault()
+        // Add the uploaded image file to the form data
+        const fileInput = document.getElementById('file');
+        console.log(fileInput.files[0])
+        const file = fileInput.files[0];
+            if (!file) {
+                alert('Please select a file to upload.');
+                return;
+            }
+
+                 
+        var formData = {
+		  action: 'write',
+          name: $('#name').val(),
+          email: $('#email').val(),
+          message: $('#message').val(),
+          file: file
+        }
+
+        //$.post(url,[data],[callback],[type]);
+        $.post('https://script.google.com/macros/s/AKfycbxThNQvVLDJe2QENpksC47P1_rY7gNng3ipImbdP9eu4Bkm5d99E-XROhMG6ewT28eM/exec', JSON.stringify(formData), function(response) {
+          alert(response);
+          readdata()
+        });
+
+        // เคลียร์ฟอร์ม
+        $('#name').val('')
+        $('#email').val('')
+        $('#message').val('')
+      })
+    })
+    
+ 
+ // Open the edit modal and populate with data
+function openEditModal(e) {
+	console.log(e)
+	const data = e.split(",");
+   $('#editID').val(data[0])
+   $('#editName').val( data[1])
+   $('#editEmail').val(data[2])
+   $('#editMessage').val(data[3])
+
+  $('#editModal').modal('show');
+}
+
+
+function updateData() {
+        //event.preventDefault();
+        var formData = {
+		  action: 'update',
+		  ID: $('#editID').val(),
+          name: $('#editName').val(),
+          email: $('#editEmail').val(),
+          message: $('#editMessage').val()
+        };
+        
+        //$.post(url,[data],[callback],[type]);
+        $.post(gas_url, JSON.stringify(formData), function(response) {
+          alert(response);
+          readdata()
+        });
+
+        // เคลียร์ฟอร์ม
+        $('#editModal').modal('hide'); 
+         $('#editID').val(''),
+          $('#editName').val(''),
+          $('#editEmail').val(''),
+          $('#editMessage').val('')
+      }
+
+// Open the edit modal and populate with data
+function deleteData(e) {
+	console.log(e)
+	alert(e);
+	var formData = {
+		  action: 'delete',
+		  ID: e
+        };
+        
+        //$.post(url,[data],[callback],[type]);
+        $.post(gas_url, JSON.stringify(formData), function(response) {
+          alert(response);
+          readdata()
+        });
+}
+     function readdata() {
+
+       // ดึงข้อมูลจาก Google Sheets
+        $.get( gas_url, function(data) {
+            // แปลงข้อมูล JSON เป็น JavaScript array
+            var dataArray = data;
+
+            // สร้างตาราง DataTables
+            $('#data-table').DataTable({
+                data: dataArray,
+                destroy: true,
+                columns: [
+                    { title: "#" },
+                    { title: "ชื่อ" },
+                    { title: "อีเมล" },
+                    { title: "ข้อความ" },
+                    // Add more columns as needed
+				    {
+					    "data": null,
+					    "render": function (data, type, row) { 
+							 return  `<button onclick="openEditModal( \'${ row} \')">Edit</button>
+					                      <button  onclick = "deleteData(\'${ row[0]} \')" >Del</button>`
+					    }
+                    }
+                ]
+           })
+      })
+   }
+
+
+  </script>
+</body>
+</html>
